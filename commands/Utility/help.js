@@ -1,82 +1,113 @@
-import axios from 'axios';
-import fs from 'fs';
-import path from 'path';
+// ===================================================================
+// 🍓 ملف الأمر: help.js
+// 📌 الوظيفة: عرض قائمة أوامر بوت snfor بشكل مرتب وجميل
+// 🛠️ المطور: حمودي سان 🇸🇩
+// 📅 التاريخ: أغسطس 2025
+// 📁 المسار: commands/help.js
+// 💬 الغرض: إظهار جميع الأوامر + معلومات المطور + رسالة حب
+// ===================================================================
 
-class Help {
-  constructor() {
-    this.name = "اوامر";
-    this.author = "Kaguya Project";
-    this.cooldowns = 60;
-    this.description = "عرض قائمة الأوامر مع كيفية استعمال كل واحد!";
-    this.role = "member";
-    this.aliases = ["أوامر", "الاوامر"];
-    this.commands = global.client.commands;
-    this.tempFolder = path.join(process.cwd(), 'temp');
+// تصدير بيانات الأمر الأساسية
+// (يستخدمها نظام الأوامر لتحميل الكود)
+export default {
+  name: "مساعدة",
+  version: "1.5",
+  hasPermission: "users",
+  credits: "حمودي سان 🇸🇩",
+  description: "عرض قائمة كاملة بالأوامر مرتبة حسب الفئة",
+  commandCategory: "نظام",
+  usages: "!اوامر",
+  cooldowns: 5,
+};
 
-    // مصفوفة الصور العشوائية
-    this.randomImageUrls = [
-      "https://i.postimg.cc/ncSwYctL/1198010.jpg",
-      "https://i.postimg.cc/x81SxfT1/4k-popstar-ahri-asu-lol-skin-splash-art-4k-wallpaper-pixground.jpg",
-      "https://i.postimg.cc/kG3TGwL3/4k-Rising-Legend-Ahri-Skin-League-Of-Legends-4-K-Wallpaper.jpg",
-      "https://i.postimg.cc/VsKSY5t4/foxfire-ahri-asu-lol-skin-splash-art-4k-wallpaper-pixground-768x432.jpg",
-      "https://i.postimg.cc/ZKZCFpST/o-Nh-Ocuu-QQ78g-Ylow6r-Xoyefy8-L166-G0-H1u-Ame-Mtq.jpg",
-      "https://i.postimg.cc/hvtNc2mD/undefined-Imgur.jpg",
-      "https://i.postimg.cc/WbbSYDmv/Utool-20240705-090316235.jpg",
-      "https://i.postimg.cc/264p8q36/wallpapersden-com-new-ahri-league-of-legends-1920x1080.jpg" 
-    ];
-  }
+// ===================================================================
+// وظيفة تشغيل الأمر (run)
+// -------------------------------------------------------------------
+// الوصف: تُنفَّذ عندما يكتب المستخدم "!اوامر"
+// المدخلات:
+//   - api: واجهة فيسبوك (لإرسال الرسائل)
+//   - event: بيانات الرسالة (مثل المرسل، المجموعة، إلخ)
+//   - client: بيانات البوت (إن وُجدت)
+// ===================================================================
 
-  async execute({ api, event, args }) {
-    api.setMessageReaction("📝", event.messageID, (err) => {}, true);
+export const run = async ({ api, event, client }) => {
+  // البيانات الثابتة
+  const botName = "snfor";
+  const developer = "حمودي سان 🇸🇩";
+  const facebook = "fb.com/babasnfor80";
+  const prefix = "!";
+  const totalCommands = 12; // عدد الأوامر (يمكن تحديثه تلقائيًا لاحقًا)
 
-    const [pageStr] = args;
-    const page = parseInt(pageStr) || 1;
-    const commandsPerPage = 10;
-    const startIndex = (page - 1) * commandsPerPage;
-    const endIndex = page * commandsPerPage;
+  // تصنيف الأوامر حسب نوعها
+  // (سهل التعديل والإضافة)
+  const categories = {
+    // فئة: تسلية ودراما
+    "🎮 تسلية": [
+      "اخترق",
+      "حب",
+      "حظ",
+      "تحدي",
+      "دراما",
+      "ميمز"
+    ],
 
-    const commandList = Array.from(this.commands.values());
-    const totalPages = Math.ceil(commandList.length / commandsPerPage);
-    const totalCommands = commandList.length;
+    // فئة: تفاعل ونقاط
+    "📈 تفاعل": [
+      "مستواي",
+      "الترتيب",
+      "هدية",
+      "رد",
+      "إيموجي"
+    ],
 
-    if (pageStr && typeof pageStr === 'string' && pageStr.toLowerCase() === 'الكل') {
-      let allCommandsMsg = "╭───────────────◊\n•——[قائمة جميع الأوامر]——•\n";
-      
-      commandList.forEach((command) => {
-        const commandName = command.name.toLowerCase();
-        allCommandsMsg += `❏ الإسم : 『${commandName}』\n`;
-      });
+    // فئة: معلومات ونظام
+    "🛠️ مطور": [
+      "مطور",
+      "مساعدة"
+    ]
+  };
 
-      allCommandsMsg += `إجمالي عدد الأوامر: ${totalCommands} أمر\n╰───────────────◊`;
-      await api.sendMessage(allCommandsMsg, event.threadID);
-    } else if (!isNaN(page) && page > 0 && page <= totalPages) {
-      let msg = `\n•—[قــائــمــة أوامــر مــيــكــو]—•\n`;
+  // بناء رسالة المساعدة
+  // (نبدأ برسالة ترحيبية جميلة)
+  let helpMessage = `
+🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓
+     🌟 *قائمة أوامر بوت ${botName}* 🌟
+🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓
 
-      const commandsToDisplay = commandList.slice(startIndex, endIndex);
-      commandsToDisplay.forEach((command, index) => {
-        const commandNumber = startIndex + index + 1;
-        msg += `[${commandNumber}] ⟻『${command.name}』\n`;
-      });
+`;
 
-      msg += `✎﹏﹏﹏﹏﹏﹏﹏﹏﹏﹏﹏✎\nالصفحة: ${page}/${totalPages}\nإجمالي عدد الأوامر: ${totalCommands} أمر\n🔖 | اكتب 'أوامر رقم الصفحة' لرؤية الصفحات الأخرى.\n 🧿 | اكتب 'أوامر الكل' لرؤية جميع الأوامر.`;
+  // إضافة كل فئة من الأوامر
+  Object.keys(categories).forEach(category => {
+    helpMessage += `\n${category}\n`;
+    categories[category].forEach(cmd => {
+      helpMessage += `  🔹 ${prefix}${cmd}\n`;
+    });
+  });
 
-      const randomImageUrl = this.randomImageUrls[Math.floor(Math.random() * this.randomImageUrls.length)];
-      const tempImagePath = path.join(this.tempFolder, `random_image_${Date.now()}.jpeg`);
+  // إضافة معلومات المطور والختام
+  helpMessage += `
 
-      try {
-        const imageResponse = await axios.get(randomImageUrl, { responseType: 'arraybuffer' });
-        fs.writeFileSync(tempImagePath, Buffer.from(imageResponse.data));
-        const attachment = fs.createReadStream(tempImagePath);
+🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓
+👑 *المطور*: ${developer}
+💬 *أحبكم يا سنافري ❤️*
+📱 *فيسبوك*: ${facebook}
+📌 *البوت شغال 24 ساعة | طوّره حمودي سان*
+🔔 *تم استخدام ${totalCommands} أوامر بنجاح!*
+🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓🍓
+  `;
 
-        await api.sendMessage({ body: msg, attachment }, event.threadID);
-      } catch (error) {
-        console.error("حدث خطأ: ", error);
-        await api.sendMessage("❌ | حدث خطأ أثناء جلب الصورة.", event.threadID);
-      }
-    } else {
-      await api.sendMessage("❌ | الصفحة غير موجودة.", event.threadID);
-    }
-  }
-}
+  // إرسال الرسالة إلى المجموعة
+  // (مع الرد على الرسالة الأصلية)
+  api.sendMessage(helpMessage, event.threadID, event.messageID)
+    .catch(err => {
+      console.error("[ خطأ ]: تعذر إرسال رسالة الأوامر:", err);
+      api.sendMessage("❌ تعذر عرض الأوامر. حاول لاحقًا.", event.threadID);
+    });
+};
 
-export default new Help();
+// ===================================================================
+// ✅ ملاحظات:
+// - يمكن إضافة المزيد من الفئات أو الأوامر بسهولة.
+// - يمكن تحويل القائمة إلى نظام صفحات لو زادت الأوامر.
+// - يمكن إضافة صورة أو رد صوتي لاحقًا.
+// ===================================================================
