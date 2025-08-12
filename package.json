@@ -1,7 +1,7 @@
 {
-  "name": "KaguyaBot",
+  "name": "snfor",
   "version": "1.0.1",
-  "description": "It's just a simple bot!",
+  "description": "بوت snfor - أحبكم يا سنافري ❤️ | المطور: حمودي سان 🇸🇩 | فيسبوك: https://www.facebook.com/babasnfor80",
   "main": "index.js",
   "type": "module",
   "scripts": {
@@ -9,8 +9,19 @@
     "dev": "nodemon .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Arjhil",
+  "author": "حمودي سان 🇸🇩",
   "license": "ISC",
+  "keywords": [
+    "bot",
+    "facebook",
+    "snfor",
+    "hamoudi",
+    "chatbot"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hamoudisan/snfor-bot.git"
+  },
   "dependencies": {
     "@duyhau/fca-unofficial": "^1.0.10",
     "@xaviabot/fb-downloader": "^1.0.14",
@@ -33,34 +44,6 @@
     "fs-extra": "^11.1.1",
     "gradient-string": "^2.0.2",
     "http": "^0.0.1-security",
-    "https": "^1.0.0",
-    "https-proxy-agent": "^4.0.0",
-    "jimp": "^0.22.10",
-    "kaguyabotfca": "^10.3.20",
-    "mal-scraper": "^2.13.2",
-    "moment-timezone": "^0.5.43",
-    "mongoose": "^7.0.3",
-    "mqtt": "^3.0.0",
-    "nedb": "^1.8.0",
-    "node-cron": "^3.0.3",
-    "node-fetch": "^3.3.2",
-    "node-notifier": "^10.0.1",
-    "nodemon": "^2.0.22",
-    "npmlog": "^1.2.0",
-    "pastebin-js": "^1.0.6",
-    "request": "^2.88.2",
-    "semver": "^7.5.4",
-    "srod-v2": "^1.0.2",
-    "string-similarity": "^4.0.4",
-    "time-sleep": "^1.0.2",
-    "tinyurl": "^1.1.7",
-    "weather-js": "^2.0.0",
-    "websocket-stream": "^5.5.0",
-    "ytdl-core": "^4.11.5"
-  },
-  "devDependencies": {
-    "@types/axios": "^0.14.0",
-    "@types/fs-extra": "^11.0.1",
-    "@types/string-similarity": "^4.0.0"
+    "https": "^1.0.0"
   }
 }
