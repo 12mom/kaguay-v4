@@ -1,4 +1,3 @@
-// KaguyaSetUp/config.js
 export default {
     "prefix": "", 
     "BOT_NAME": "dora",
@@ -20,7 +19,6 @@ export default {
             uri: "mongodb://0.0.0.0:27017"
         }
     },
-    // فقط القيمة الافتراضية، بدون process.env
-    port: 3000,  // سيتم تجاوزه في app.js باستخدام process.env.PORT
+    port: 3000,
     mqtt_refresh: 1200000
 };
