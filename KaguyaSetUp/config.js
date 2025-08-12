@@ -1,6 +1,6 @@
 // KaguyaSetUp/config.js
 export default {
-    "prefix": "#", 
+    "prefix": "", 
     "BOT_NAME": "dora",
     "ADMIN_IDS": ["61550232547706"],
     "botEnabled": true,
