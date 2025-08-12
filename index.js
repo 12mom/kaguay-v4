@@ -11,7 +11,7 @@ import EventEmitter from "events";
 import axios from "axios";
 import semver from "semver";
 
-class Kaguya extends EventEmitter {
+class snfor extends EventEmitter {
   constructor() {
     super();
     this.on("system:error", (err) => {
@@ -35,27 +35,47 @@ class Kaguya extends EventEmitter {
       this.emit("system:error", "Cannot parse JSON credentials in KaguyaSetUp/KaguyaState.json");
     }
   }
-async checkVersion() {
+
+  async checkVersion() {
     try {
-        const pinkGradient = gradient(["#ff00ff", "#ff99ff"]); // تدرج لوني وردي
-        console.log(pinkGradient(`       
-█▄▀ ▄▀█ █▀▀ █░█ █▄█ ▄▀█
-█░█ █▀█ █▄█ █▄█ ░█░ █▀█
-`));
+      // تدرج وردي جميل
+      const pinkGradient = gradient(["#ff66cc", "#ff00ff", "#cc00ff"]);
+      
+      console.log("");
+      console.log(pinkGradient(`       
+█▀█ █▀█ █▄░█ █▀▀ █▀█ █▀
+█▀▄ █▄█ █░▀█ █▄▄ █▄█ ▄█
+      `));
 
-        console.log(`${gradient(["#ff99ff", "#ff00ff"])("[ owner ]: ")} ${gradient("cyan", "pink")("HUSSEIN YACOUBI")}`);
-        console.log(`${gradient(["#ff99ff", "#ff00ff"])("[ Facebook ]: ")} ${gradient("cyan", "pink")("https://www.facebook.com/share/15EQBXgrmV/")}`);
+      console.log(pinkGradient("=".repeat(55)));
+      console.log(`${pinkGradient("[ المطور ]: ")} ${gradient("cyan", "pink")("حمودي سان 🇸🇩")}`);
+      console.log(`${pinkGradient("[ فيسبوك ]: ")} ${gradient("cyan", "pink")("https://www.facebook.com/babasnfor80")}`);
+      console.log(`${pinkGradient("[ رسالة ]: ")} ${gradient("white", "pink")("أحبكم يا سنافري ❤️")}`);
+      console.log(pinkGradient("=".repeat(55)));
+      console.log("");
 
+      // التحقق من التحديثات (اختياري - يمكن تعطيله لعدم الاتصال بجهاز غريب)
+      try {
         const { data } = await axios.get("https://raw.githubusercontent.com/Tshukie/Kaguya-Pr0ject/master/package.json");
-        if (semver.lt(this.package.version, (data.version ??= this.package.version))) {
-            log([{ message: "[ SYSTEM ]: ", color: "yellow" }, { message: `New Update: contact the owner`, color: "white" }]);
+        if (semver.lt(this.package.version, data.version)) {
+          log([
+            { message: "[ نظام ]: ", color: "yellow" },
+            { message: "يوجد تحديث جديد! تواصل مع المطور.", color: "white" }
+          ]);
         }
+      } catch (err) {
+        log([
+          { message: "[ تنبيه ]: ", color: "yellow" },
+          { message: "تعذر التحقق من التحديثات.", color: "white" }
+        ]);
+      }
 
-        this.emit("system:run"); // تشغيل النظام مباشرة بدون إطار متحرك
+      this.emit("system:run");
+
     } catch (err) {
-        this.emit("system:error", err);
+      this.emit("system:error", err);
     }
-}
+  }
 
   async loadComponents() {
     let failedCount = 0;
@@ -63,29 +83,29 @@ async checkVersion() {
     // تحميل الأوامر
     try {
       await commandMiddleware();
-      console.log(`✔ Loaded ${global.client.commands.size} commands.`);
+      console.log(`✔ تم تحميل ${global.client.commands.size} أمر.`);
     } catch (err) {
       failedCount++;
-      console.error(`❌ Failed to load commands: ${err.message}`);
+      console.error(`❌ فشل تحميل الأوامر: ${err.message}`);
     }
 
     // تحميل الأحداث
     try {
       await eventMiddleware();
-      console.log(`✔ Loaded ${global.client.events.size} events.`);
+      console.log(`✔ تم تحميل ${global.client.events.size} حدث.`);
     } catch (err) {
       failedCount++;
-      console.error(`❌ Failed to load events: ${err.message}`);
+      console.error(`❌ فشل تحميل الأحداث: ${err.message}`);
     }
 
-    // طباعة ملخص التحميل
+    // عرض النتائج
     console.log("=".repeat(50));
-    console.log(`✔ Total commands loaded: ${global.client.commands.size}`);
-    console.log(`✔ Total events loaded: ${global.client.events.size}`);
+    console.log(`✔ إجمالي الأوامر: ${global.client.commands.size}`);
+    console.log(`✔ إجمالي الأحداث: ${global.client.events.size}`);
     if (failedCount > 0) {
-      console.log(`❌ Failed to load ${failedCount} component(s).`);
+      console.log(`❌ فشل في تحميل ${failedCount} مكون.`);
     } else {
-      console.log("✔ All components loaded successfully!");
+      console.log("✔ جميع المكونات تم تحميلها بنجاح!");
     }
     console.log("=".repeat(50));
   }
@@ -96,7 +116,7 @@ async checkVersion() {
       const [i, a, m] = [Math.floor(t / 3600), Math.floor((t % 3600) / 60), Math.floor(t % 60)].map((num) => (num < 10 ? "0" + num : num));
       const formatMemoryUsage = (data) => `${Math.round((data / 1024 / 1024) * 100) / 100} MB`;
       const memoryData = process.memoryUsage();
-      process.title = `Kaguya Project - Author: Arjhil Dacayanan - ${i}:${a}:${m} - External: ${formatMemoryUsage(memoryData.external)}`;
+      process.title = `snfor - المطور: حمودي سان - ${i}:${a}:${m} - ذاكرة: ${formatMemoryUsage(memoryData.external)}`;
     }, 1000);
 
     (async () => {
@@ -112,7 +132,7 @@ async checkVersion() {
         config: this.currentConfig,
       };
 
-      await this.loadComponents(); // استدعاء دالة التحميل
+      await this.loadComponents();
 
       this.checkVersion();
 
@@ -131,12 +151,12 @@ async checkVersion() {
                   await listen({ api, event, client: global.client });
                 });
                 await sleep(this.currentConfig.mqtt_refresh);
-                notifer("[ MQTT ]", "Mqtt refresh in progress!");
-                log([{ message: "[ MQTT ]: ", color: "yellow" }, { message: `Refresh mqtt in progress!`, color: "white" }]);
+                notifer("[ MQTT ]", "جاري تحديث الاتصال!");
+                log([{ message: "[ MQTT ]: ", color: "yellow" }, { message: `جاري تحديث الاتصال!`, color: "white" }]);
                 await mqtt.stopListening();
                 await sleep(5000);
-                notifer("[ MQTT ]", "Refresh successful!");
-                log([{ message: "[ MQTT ]: ", color: "green" }, { message: `Refresh successful!`, color: "white" }]);
+                notifer("[ MQTT ]", "تم التحديث بنجاح!");
+                log([{ message: "[ MQTT ]: ", color: "green" }, { message: `تم التحديث بنجاح!`, color: "white" }]);
                 listenMqtt.isListening = false;
               }
               listenMqtt();
@@ -153,5 +173,6 @@ async checkVersion() {
   }
 }
 
-const KaguyaInstance = new Kaguya();
-KaguyaInstance.start();
+// تشغيل البوت
+const snforInstance = new snfor();
+snforInstance.start();
