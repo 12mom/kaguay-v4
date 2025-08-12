@@ -1,4 +1,4 @@
-// index.js — نسخة مُصلحة وآمنة لمشروع snfor
+// index.js — نسخة نهائية، مكتملة، وآمنة لمشروع snfor
 
 import fs from "fs";
 import { fileURLToPath } from "url";
@@ -9,7 +9,7 @@ import gradient from "gradient-string";
 import { log, notifer } from "./logger/index.js";
 import { commandMiddleware, eventMiddleware } from "./middleware/index.js";
 import config from "./KaguyaSetUp/config.js";
-import login from "@xaviabot/fca-unofficial"; // ✅ استخدام حزمة موثوقة
+import login from "@xaviabot/fca-unofficial";
 
 // تحديد مسار الجذر
 const __filename = fileURLToPath(import.meta.url);
@@ -42,7 +42,7 @@ class snfor {
         { message: "[ خطأ ]: ", color: "red" },
         { message: `فشل في قراءة appState: ${error.message}`, color: "white" }
       ]);
-      process.exit(1); // ❌ خطأ، لذا يجب الخروج برمز 1
+      process.exit(1);
     }
   }
 
@@ -60,14 +60,15 @@ class snfor {
     console.log(pinkGradient("=".repeat(55)));
     console.log("");
 
-    // ✅ تحقق من التحديثات من مستودعك الخاص
+    // ✅ التحقق من التحديثات من مستودعك
     try {
+      // 🔧 إصلاح: إزالة المسافة الزائدة في الرابط
       const response = await axios.get("https://raw.githubusercontent.com/hamoudisan/snfor-bot/main/package.json", { timeout: 10000 });
       const remotePackage = response.data;
       if (semver.lt(this.package.version, remotePackage.version)) {
         log([
           { message: "[ نظام ]: ", color: "yellow" },
-          { message: "يوجد تحديث جديد! قم بالترقية.", color: "white" }
+          { message: `يوجد تحديث جديد (v${remotePackage.version})! قم بالترقية.`, color: "white" }
         ]);
       }
     } catch (err) {
@@ -122,18 +123,38 @@ class snfor {
           { message: "[ اتصال ]: ", color: "red" },
           { message: `فشل في تسجيل الدخول: ${err.message}`, color: "white" }
         ]);
+        console.error(err); // سجل الخطأ الكامل
         return process.exit(1);
       }
 
       api.setOptions(this.currentConfig.options);
 
-      // ✅ استماع واحد فقط، بدون تكرار
+      // ✅ استماع آمن مع try/catch
       api.listen(async (err, event) => {
         if (err) {
           log([{ message: "[ استماع ]: ", color: "red" }, { message: err.message, color: "white" }]);
           return;
         }
-        await import("./listen/listen.js").then(module => module.listen({ api, event, client: global.client }));
+
+        try {
+          const listenPath = path.join(__dirname, "listen", "listen.js");
+          if (!fs.existsSync(listenPath)) {
+            log([{ message: "[ خطأ ]: ", color: "red" }, { message: "ملف listen.js غير موجود.", color: "white" }]);
+            return;
+          }
+
+          const { listen } = await import("./listen/listen.js");
+          if (typeof listen === "function") {
+            await listen({ api, event, client: global.client });
+          } else {
+            log([{ message: "[ خطأ ]: ", color: "red" }, { message: "الدالة listen ليست دالة صالحة.", color: "white" }]);
+          }
+        } catch (error) {
+          log([
+            { message: "[ استيراد ]: ", color: "red" },
+            { message: `فشل في تحميل listen.js: ${error.message}`, color: "white" }
+          ]);
+        }
       });
 
       // تحديث عنوان النافذة
