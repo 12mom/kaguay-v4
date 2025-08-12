@@ -1,112 +1,121 @@
-// listenMqtt.js - بوت مسنجر مع MQTT (نسخة آمنة)
+// listenMqtt.js — نسخة آمنة للعمل على Render
 
 const mqtt = require('mqtt');
-const axios = require('axios'); // لربط بوت الماسنجر
 
-// --------------------
-// 1. إعدادات MQTT
-// --------------------
-const MQTT_BROKER = 'mqtt://broker.hivemq.com'; // يمكنك تغييره
-const MQTT_TOPIC = 'messenger/requests';
+// ------------------------------
+// 1. تحقق من التوكن والبيئة
+// ------------------------------
+const PAGE_ACCESS_TOKEN = process.env.PAGE_ACCESS_TOKEN;
+if (!PAGE_ACCESS_TOKEN) {
+  console.warn('[تحذير] لم يتم تعيين PAGE_ACCESS_TOKEN في البيئة. بعض الميزات لن تعمل.');
+}
 
-// --------------------
-// 2. دالة التعامل مع الرسائل الواردة (من MQTT)
-// --------------------
+// ------------------------------
+// 2. دالة التعامل مع الرسائل (MQTT)
+// ------------------------------
 function handleMessage(topic, message) {
   try {
-    console.log(`[MQTT] رسالة واردة من ${topic}: ${message.toString()}`);
+    console.log(`[MQTT] رسالة من الموضوع: ${topic}`);
+    console.log(`[MQTT] المحتوى: ${message.toString()}`);
 
-    const data = JSON.parse(message.toString());
-
-    // تأكد أن البيانات تحتوي على user_id وtext
-    if (data.user_id && data.text) {
-      sendMessengerReply(data.user_id, data.text);
-    }
+    // هنا يمكنك معالجة الرسالة، مثلاً إرسالها إلى ماسنجر
+    // مثال: JSON.parse(message.toString()) ثم إرسال رد
 
   } catch (err) {
     console.error('[MQTT] خطأ في معالجة الرسالة:', err.message);
   }
 }
 
-// --------------------
-// 3. دالة إرسال رد عبر Facebook Graph API
-// --------------------
-async function sendMessengerReply(userId, userText) {
-  const PAGE_ACCESS_TOKEN = 'EAAP...'; // ⚠️ ضع توكن الصفحة هنا
+// ------------------------------
+// 3. دالة آمنة للاتصال بـ MQTT
+// ------------------------------
+function connectMqtt() {
+  const brokerUrl = process.env.MQTT_BROKER || 'mqtt://broker.hivemq.com';
+  const topic = process.env.MQTT_TOPIC || 'messenger/incoming';
 
-  // مثال بسيط للرد
-  let reply = "تم استلام رسالتك: " + userText;
+  console.log(`[MQTT] جارٍ الاتصال بالخادم: ${brokerUrl}`);
+
+  let client;
 
   try {
-    await axios.post(
-      `https://graph.facebook.com/v20.0/me/messages`,
-      {
-        recipient: { id: userId },
-        message: { text: reply },
-      },
-      {
-        params: { access_token: PAGE_ACCESS_TOKEN },
-        headers: { 'Content-Type': 'application/json' },
+    client = mqtt.connect(brokerUrl);
+
+    client.on('connect', () => {
+      console.log('[MQTT] الاتصال ناجح');
+      if (typeof client.subscribe === 'function') {
+        client.subscribe(topic, (err) => {
+          if (err) {
+            console.error(`[MQTT] فشل في الاشتراك في ${topic}:`, err.message);
+          } else {
+            console.log(`[MQTT] مشترك في: ${topic}`);
+          }
+        });
       }
-    );
-    console.log(`[ماسنجر] رد تمت إرساله للمستخدم ${userId}`);
-  } catch (error) {
-    console.error('[ماسنجر] فشل في إرسال الرسالة:', error.response?.data || error.message);
+    });
+
+    // ✅ التحقق من أن handleMessage دالة قبل استدعاءها
+    client.on('message', (receivedTopic, message) => {
+      if (typeof handleMessage === 'function' && handleMessage instanceof Function) {
+        handleMessage(receivedTopic, message);
+      } else {
+        console.error('[MQTT] handleMessage ليست دالة صالحة:', typeof handleMessage);
+      }
+    });
+
+    client.on('error', (err) => {
+      console.error('[MQTT] خطأ في الاتصال:', err.message);
+    });
+
+    client.on('reconnect', () => {
+      console.log('[MQTT] إعادة الاتصال جارٍ...');
+    });
+
+    return client;
+
+  } catch (err) {
+    console.error('[MQTT] فشل في إنشاء اتصال MQTT:', err.message);
+    return null;
   }
 }
 
-// --------------------
-// 4. اتصال MQTT مع التحقق من الأخطاء
-// --------------------
-function connectMqtt() {
-  console.log('[MQTT] جارٍ الاتصال بالخادم...');
+// ------------------------------
+// 4. تشغيل الاتصال فقط إذا كنا في بيئة رئيسية
+// ------------------------------
+if (require.main === module) {
+  // هذا الشرط يمنع التنفيذ عند الاستيراد كـ module
+  console.log('[البوت] تشغيل خدمة MQTT...');
 
-  const client = mqtt.connect(MQTT_BROKER);
+  // ✅ تأكد أن الدالة موجودة
+  if (typeof connectMqtt === 'function') {
+    const mqttClient = connectMqtt();
 
-  client.on('connect', () => {
-    console.log('[MQTT] متصل بالخادم بنجاح');
-    client.subscribe(MQTT_TOPIC, (err) => {
-      if (err) {
-        console.error('[MQTT] خطأ في الاشتراك:', err);
-      } else {
-        console.log(`[MQTT] مشترك في الموضوع: ${MQTT_TOPIC}`);
-      }
-    });
-  });
-
-  // ✅ التحقق من أن handleMessage دالة قبل استخدامها
-  client.on('message', (topic, message) => {
-    if (typeof handleMessage === 'function') {
-      handleMessage(topic, message);
-    } else {
-      console.error('[MQTT] الدالة handleMessage غير معرفة أو ليست دالة');
-    }
-  });
-
-  client.on('error', (err) => {
-    console.error('[MQTT] خطأ في الاتصال:', err);
-  });
-
-  client.on('reconnect', () => {
-    console.log('[MQTT] إعادة الاتصال...');
-  });
-
-  return client;
+    // تصدير للإستخدام في ملفات أخرى
+    module.exports = mqttClient;
+  } else {
+    console.error('[نظام] connectMqtt ليست دالة!');
+  }
+} else {
+  // إذا استُخدم كوحدة (require)، سجّل ذلك
+  console.log('[MQTT] تم استيراد الوحدة بنجاح (غير نشط الآن)');
+  module.exports = connectMqtt;
 }
 
-// --------------------
-// 5. تشغيل البوت
-// --------------------
-const mqttClient = connectMqtt();
-
-// ✅ حماية من ERR_INVALID_ARG_TYPE
+// ------------------------------
+// 5. منع الأخطاء المفاجئة
+// ------------------------------
 process.on('uncaughtException', (err) => {
   if (err.code === 'ERR_INVALID_ARG_TYPE') {
-    console.error('[نظام] تم منع خطأ ERR_INVALID_ARG_TYPE:', err.message);
-    console.error('[نظام] تأكد من أن كل event listener هو دالة صالحة.');
+    console.error('[نظام] تم اصطياد ERR_INVALID_ARG_TYPE:');
+    console.error('الرسالة:', err.message);
+    console.error('الدالة التتبع:', err.stack);
+    console.log('[نظام] البوت سيحاول الاستمرار... (أو إعادة التشغيل)');
+    // لا تتوقف — Render سيُعيد التشغيل تلقائيًا
   } else {
-    throw err; // لا تمنع الأخطاء الأخرى
+    console.error('[نظام] خطأ غير متوقع:', err);
+    process.exit(1); // أخرج فقط للأخطاء الحرجة
   }
 });
 
-console.log('[البوت] بوت الماسنجر يعمل الآن مع MQTT ✅');
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[نظام] Rejection غير معالج:', reason);
+});
